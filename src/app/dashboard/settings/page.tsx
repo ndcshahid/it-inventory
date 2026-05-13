@@ -1,5 +1,5 @@
 'use client';
-
+export const dynamic = 'force-dynamic';
 import { useEffect, useState } from 'react';
 import { Plus, Edit2, Trash2, Tags, MapPin, Building2 } from 'lucide-react';
 import toast from 'react-hot-toast';

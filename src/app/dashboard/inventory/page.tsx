@@ -1,5 +1,5 @@
 'use client';
-
+export const dynamic = 'force-dynamic';
 import { useEffect, useState } from 'react';
 import { Plus, Search, Filter, Download, Eye, Edit2, Trash2, Package } from 'lucide-react';
 import { useSession } from 'next-auth/react';

@@ -1,5 +1,5 @@
 'use client';
-
+export const dynamic = 'force-dynamic';
 import { useEffect, useState } from 'react';
 import { Search, Activity } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
