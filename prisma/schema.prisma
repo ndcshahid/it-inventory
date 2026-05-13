@@ -1,0 +1,221 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  IT_MANAGER
+  VIEWER
+}
+
+enum AssetStatus {
+  AVAILABLE
+  ISSUED
+  TRANSFERRED
+  UNDER_REPAIR
+  DAMAGED
+  LOST
+  RETIRED
+}
+
+enum AssetCondition {
+  NEW
+  GOOD
+  FAIR
+  POOR
+  DAMAGED
+}
+
+enum RepairStatus {
+  SENT_FOR_REPAIR
+  IN_PROGRESS
+  REPAIRED
+  NOT_REPAIRABLE
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String?  @unique
+  password  String
+  name      String
+  role      Role     @default(VIEWER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  issuedAssets  AssetIssue[]   @relation("IssuedBy")
+  returnedAssets AssetReturn[] @relation("ReceivedBy")
+  transfers     AssetTransfer[] @relation("TransferredBy")
+  activityLogs  ActivityLog[]
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employees Employee[]
+}
+
+model Location {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assets         Asset[]
+  transfersFrom  AssetTransfer[] @relation("FromLocation")
+  transfersTo    AssetTransfer[] @relation("ToLocation")
+  employees      Employee[]
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assets Asset[]
+}
+
+model Employee {
+  id           String   @id @default(cuid())
+  employeeId   String   @unique
+  name         String
+  email        String?  @unique
+  phone        String?
+  designation  String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  locationId   String?
+  location     Location?   @relation(fields: [locationId], references: [id])
+
+  issuedAssets AssetIssue[]
+}
+
+model Asset {
+  id              String         @id @default(cuid())
+  assetName       String
+  assetTag        String         @unique
+  serialNumber    String         @unique
+  brand           String?
+  model           String?
+  purchaseDate    DateTime?
+  purchasePrice   Float?
+  warrantyExpiry  DateTime?
+  supplierName    String?
+  condition       AssetCondition @default(GOOD)
+  status          AssetStatus    @default(AVAILABLE)
+  notes           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+  locationId String?
+  location   Location? @relation(fields: [locationId], references: [id])
+
+  issues        AssetIssue[]
+  returns       AssetReturn[]
+  transfers     AssetTransfer[]
+  repairRecords RepairRecord[]
+  activityLogs  ActivityLog[]
+}
+
+model AssetIssue {
+  id                 String    @id @default(cuid())
+  issueDate          DateTime
+  expectedReturnDate DateTime?
+  remarks            String?
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  assetId    String
+  asset      Asset    @relation(fields: [assetId], references: [id])
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  issuedById String
+  issuedBy   User     @relation("IssuedBy", fields: [issuedById], references: [id])
+
+  returns AssetReturn[]
+}
+
+model AssetReturn {
+  id              String         @id @default(cuid())
+  returnDate      DateTime
+  returnCondition AssetCondition @default(GOOD)
+  remarks         String?
+  createdAt       DateTime       @default(now())
+
+  assetId    String
+  asset      Asset      @relation(fields: [assetId], references: [id])
+  issueId    String
+  issue      AssetIssue @relation(fields: [issueId], references: [id])
+  receivedById String
+  receivedBy User       @relation("ReceivedBy", fields: [receivedById], references: [id])
+}
+
+model AssetTransfer {
+  id           String   @id @default(cuid())
+  transferDate DateTime
+  receivedBy   String?
+  remarks      String?
+  createdAt    DateTime @default(now())
+
+  assetId          String
+  asset            Asset    @relation(fields: [assetId], references: [id])
+  fromLocationId   String?
+  fromLocation     Location? @relation("FromLocation", fields: [fromLocationId], references: [id])
+  toLocationId     String?
+  toLocation       Location? @relation("ToLocation", fields: [toLocationId], references: [id])
+  transferredById  String
+  transferredBy    User     @relation("TransferredBy", fields: [transferredById], references: [id])
+}
+
+model RepairRecord {
+  id               String       @id @default(cuid())
+  issueDescription String
+  repairVendor     String?
+  sentDate         DateTime
+  expectedReturn   DateTime?
+  repairCost       Float?
+  status           RepairStatus @default(SENT_FOR_REPAIR)
+  remarks          String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  assetId String
+  asset   Asset  @relation(fields: [assetId], references: [id])
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  actionType  String
+  description String
+  createdAt   DateTime @default(now())
+
+  userId  String?
+  user    User?   @relation(fields: [userId], references: [id])
+  assetId String?
+  asset   Asset?  @relation(fields: [assetId], references: [id])
+}
