@@ -1,12 +1,13 @@
 'use client';
 export const dynamic = 'force-dynamic';
 import { useEffect, useState } from 'react';
-import { Plus, Search, Filter, Download, Eye, Edit2, Trash2, Package } from 'lucide-react';
+import { Plus, Search, Filter, Download, Eye, Edit2, Trash2, Package, Upload } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Pagination } from '@/components/ui/pagination';
 import { AssetModal } from '@/components/forms/asset-modal';
+import { BulkUploadModal } from '@/components/forms/bulk-upload-modal';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { formatDate, formatCurrency, exportToCSV } from '@/lib/utils';
 import Link from 'next/link';
@@ -25,6 +26,7 @@ export default function InventoryPage() {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
   const [editAsset, setEditAsset] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -89,9 +91,14 @@ export default function InventoryPage() {
             <Download className="w-4 h-4" /> Export CSV
           </button>
           {canEdit && (
-            <button onClick={() => { setEditAsset(null); setShowModal(true); }} className="btn-primary">
-              <Plus className="w-4 h-4" /> Add Asset
-            </button>
+            <>
+              <button onClick={() => setShowBulkModal(true)} className="btn-secondary">
+                <Upload className="w-4 h-4" /> Bulk Import
+              </button>
+              <button onClick={() => { setEditAsset(null); setShowModal(true); }} className="btn-primary">
+                <Plus className="w-4 h-4" /> Add Asset
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -215,6 +222,13 @@ export default function InventoryPage() {
           </div>
         )}
       </div>
+
+      {showBulkModal && (
+        <BulkUploadModal
+          onClose={() => setShowBulkModal(false)}
+          onSave={() => { setShowBulkModal(false); fetchAssets(); }}
+        />
+      )}
 
       {showModal && (
         <AssetModal

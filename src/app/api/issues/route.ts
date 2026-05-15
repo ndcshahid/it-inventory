@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { assetId, employeeId, issueDate, expectedReturnDate, remarks } = body;
+    const { assetId, employeeId, issueDate, expectedReturnDate, remarks, documentLink } = body;
 
     if (!assetId || !employeeId || !issueDate) {
       return NextResponse.json({ error: 'Asset, employee, and issue date are required' }, { status: 400 });
@@ -78,6 +78,7 @@ export async function POST(req: NextRequest) {
           issueDate: new Date(issueDate),
           expectedReturnDate: expectedReturnDate ? new Date(expectedReturnDate) : null,
           remarks,
+          documentLink: documentLink || null,
           isActive: true,
         },
       }),

@@ -146,6 +146,7 @@ model AssetIssue {
   issueDate          DateTime
   expectedReturnDate DateTime?
   remarks            String?
+  documentLink       String?
   isActive           Boolean   @default(true)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt

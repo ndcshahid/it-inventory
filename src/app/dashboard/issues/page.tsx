@@ -1,7 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
 import { useEffect, useState } from 'react';
-import { Plus, Search, ArrowRightLeft } from 'lucide-react';
+import { Plus, Search, ArrowRightLeft, Pencil } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
 import { Pagination } from '@/components/ui/pagination';
@@ -18,6 +18,7 @@ export default function IssuesPage() {
   const [search, setSearch] = useState('');
   const [activeOnly, setActiveOnly] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [editingIssue, setEditingIssue] = useState<any>(null);
 
   const canEdit = ['ADMIN', 'IT_MANAGER'].includes(session?.user?.role || '');
 
@@ -73,18 +74,20 @@ export default function IssuesPage() {
                 <th className="table-th">Issued By</th>
                 <th className="table-th">Status</th>
                 <th className="table-th">Remarks</th>
+                <th className="table-th">Document Link</th>
+                {canEdit && <th className="table-th">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 [...Array(5)].map((_, i) => (
-                  <tr key={i}>{[...Array(7)].map((_, j) => (
+                  <tr key={i}>{[...Array(canEdit ? 9 : 8)].map((_, j) => (
                     <td key={j} className="table-td"><div className="h-4 bg-gray-100 rounded animate-pulse" /></td>
                   ))}</tr>
                 ))
               ) : issues.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="table-td text-center py-12">
+                  <td colSpan={canEdit ? 9 : 8} className="table-td text-center py-12">
                     <ArrowRightLeft className="w-10 h-10 text-gray-300 mx-auto mb-2" />
                     <p className="text-gray-400">No issuance records found</p>
                   </td>
@@ -109,6 +112,22 @@ export default function IssuesPage() {
                       </span>
                     </td>
                     <td className="table-td text-gray-500 max-w-xs truncate">{issue.remarks || '—'}</td>
+                    <td className="table-td">
+                      {issue.documentLink
+                        ? <a href={issue.documentLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm truncate max-w-xs block">View</a>
+                        : <span className="text-gray-400">—</span>}
+                    </td>
+                    {canEdit && (
+                      <td className="table-td">
+                        <button
+                          onClick={() => setEditingIssue(issue)}
+                          className="p-1.5 hover:bg-gray-100 rounded text-gray-500 hover:text-gray-700"
+                          title="Edit"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -126,6 +145,13 @@ export default function IssuesPage() {
         <IssueModal
           onClose={() => setShowModal(false)}
           onSave={() => { setShowModal(false); fetchIssues(); }}
+        />
+      )}
+      {editingIssue && (
+        <IssueModal
+          issue={editingIssue}
+          onClose={() => setEditingIssue(null)}
+          onSave={() => { setEditingIssue(null); fetchIssues(); }}
         />
       )}
     </div>
